@@ -1,3 +1,11 @@
+function mainDataCheck(data, options) {
+    if (!data 
+        || !Array.isArray(data.sellers) || !Array.isArray(data.products) || !Array.isArray(data.purchase_records) 
+        || data.sellers.length === 0 || data.products.length === 0 || data.purchase_records.length === 0
+        || typeof options !== "object") 
+    throw new Error('Некорректные входные данные');
+}
+
 /**
  * Функция для расчета выручки
  * @param purchase запись о покупке
@@ -5,7 +13,7 @@
  * @returns {number}
  */
 function calculateSimpleRevenue(purchase, _product) {
-   // @TODO: Расчет выручки от операции
+   const { discount, sale_price, quantity } = purchase;
 }
 
 /**
@@ -16,7 +24,7 @@ function calculateSimpleRevenue(purchase, _product) {
  * @returns {number}
  */
 function calculateBonusByProfit(index, total, seller) {
-    // @TODO: Расчет бонуса от позиции в рейтинге
+    const { profit } = seller
 }
 
 /**
@@ -26,9 +34,32 @@ function calculateBonusByProfit(index, total, seller) {
  * @returns {{revenue, top_products, bonus, name, sales_count, profit, seller_id}[]}
  */
 function analyzeSalesData(data, options) {
-    // @TODO: Проверка входных данных
+    
+    mainDataCheck(data, options)
 
-    // @TODO: Проверка наличия опций
+    const { calculateRevenue, calculateBonus } = options; 
+
+    const sellerStats = data.sellers.map(seller => ({
+        id: seller.id,
+        name: `${seller.first_name} ${seller.last_name}`,
+        revenue: 0,
+        profit: 0,
+        sales_count: 0,
+        products_sold: {}
+    }));    
+
+    const sellerIndex = {};
+    sellerStats.forEach(seller => {
+        sellerIndex[seller.id] = seller;
+    });
+
+    const productIndex = {};
+    data.products.forEach(product => {
+        productIndex[product.sku] = product;
+    });
+
+    console.log(productIndex)
+
 
     // @TODO: Подготовка промежуточных данных для сбора статистики
 
