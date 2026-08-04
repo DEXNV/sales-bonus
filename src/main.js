@@ -13,7 +13,8 @@ function mainDataCheck(data, options) {
  * @returns {number}
  */
 function calculateSimpleRevenue(purchase, _product) {
-   const { discount, sale_price, quantity } = purchase;
+    const discount =  1 - (purchase.discount / 100)
+    return ((_product)? _product.sale_price : purchase.sale_price) * purchase.quantity * discount
 }
 
 /**
@@ -58,14 +59,33 @@ function analyzeSalesData(data, options) {
         productIndex[product.sku] = product;
     });
 
-    console.log(productIndex)
+    console.log(sellerIndex)
 
+    data.purchase_records.forEach(record => {
+        const seller = sellerIndex[record.seller_id];
+        seller.sales_count += 1
+        seller.revenue += record.total_amount
 
-    // @TODO: Подготовка промежуточных данных для сбора статистики
+        // Расчёт прибыли для каждого товара
+        record.items.forEach(item => {
+            const product = productIndex[item.sku]; // Товар
+            let cost = product.sale_price * item.quantity
+            console.log(calculateSimpleRevenue(item, product))
+            if (!seller.products_sold[item.sku]) {
+                seller.products_sold[item.sku] = 0;
+            }
+            seller.products_sold[item.sku] += 1
+            // Посчитать выручку (revenue) с учётом скидки через функцию calculateRevenue
+            // Посчитать прибыль: выручка минус себестоимость
+            // Увеличить общую накопленную прибыль (profit) у продавца  
 
-    // @TODO: Индексация продавцов и товаров для быстрого доступа
-
-    // @TODO: Расчет выручки и прибыли для каждого продавца
+            // Учёт количества проданных товаров
+            if (!seller.products_sold[item.sku]) {
+                seller.products_sold[item.sku] = 0;
+            }
+            // По артикулу товара увеличить его проданное количество у продавца
+        });
+    }); 
 
     // @TODO: Сортировка продавцов по прибыли
 
