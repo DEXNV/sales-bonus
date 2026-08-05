@@ -59,7 +59,8 @@ function analyzeSalesData(data, options) {
         revenue: 0,
         profit: 0,
         sales_count: 0,
-        products_sold: {}
+        products_sold: {},
+        cost: 0
     }));    
 
     const sellerIndex = {};
@@ -78,14 +79,15 @@ function analyzeSalesData(data, options) {
 
         // Расчёт прибыли для каждого товара
         record.items.forEach(item => {
-            const product = productIndex[item.sku]; // Товар
+             const product = productIndex[item.sku];
 
-            const cost = +(product.purchase_price * item.quantity).toFixed(2);
-            const revenue = +calculateSimpleRevenue(item, product).toFixed(2);
-            const profit = +(revenue - cost).toFixed(2);
+            const cost = +(product.purchase_price * item.quantity);
+            const revenue = +calculateSimpleRevenue(item, product);
+            const profit = +(revenue - cost);
 
             seller.revenue = +(seller.revenue + revenue).toFixed(2);
-            seller.profit = +(seller.profit + profit).toFixed(2);
+            seller.cost = +(seller.cost + cost).toFixed(2);
+            seller.profit = +(seller.profit + profit);
 
             if (!seller.products_sold[item.sku]) {
                 seller.products_sold[item.sku] = 0;
@@ -93,7 +95,7 @@ function analyzeSalesData(data, options) {
 
             seller.products_sold[item.sku] += item.quantity;  
         });
-    }); 
+    });
 
     sellerStats.sort((a, b) => b.profit - a.profit);
 
