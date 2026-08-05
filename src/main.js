@@ -26,6 +26,17 @@ function calculateSimpleRevenue(purchase, _product) {
  */
 function calculateBonusByProfit(index, total, seller) {
     const { profit } = seller
+    
+
+    if (index === 0) {
+    return profit * 0.15;
+    } else if (index === 1 || index === 2) {
+        return profit * 0.10;
+    } else if (index === total - 1) {
+        return 0;
+    } else { // Для всех остальных
+        return profit * 0.05;
+    } 
 }
 
 /**
@@ -68,24 +79,34 @@ function analyzeSalesData(data, options) {
         record.items.forEach(item => {
             const product = productIndex[item.sku]; // Товар
 
-            const cost = product.sale_price * item.quantity
+            const cost = product.purchase_price * item.quantity;
             const revenue = calculateSimpleRevenue(item, product)
-            const profit = revenue - product.purchase_price
+            const profit = revenue - cost;
 
             if (!seller.products_sold[item.sku]) {
                 seller.products_sold[item.sku] = 0;
             }
 
-            seller.products_sold[item.sku] += 1
+            seller.products_sold[item.sku] += item.quantity;  
             seller.profit += profit
         });
     }); 
 
-    sellerStats.sort((left, right) => right - left);
+    sellerStats.sort((a, b) => b.profit - a.profit);
 
-    // @TODO: Сортировка продавцов по прибыли
+    sellerStats.forEach((seller, index) => {
+        seller.bonus = calculateBonusByProfit(index, sellerStats.length, seller)
+        seller.top_products = Object.entries(seller.products_sold).map(([sku, quantity]) => ({ sku, quantity })).sort((a, b) => b.quantity - a.quantity).slice(0, 10);
+        console.log(seller.top_products)    
+    });
 
-    // @TODO: Назначение премий на основе ранжирования
-
-    // @TODO: Подготовка итоговой коллекции с нужными полями
+    return sellerStats.map(seller => ({
+        seller_id: seller.id,
+        name: seller.name,
+        revenue: +seller.revenue.toFixed(2),
+        profit: +seller.profit.toFixed(2),
+        sales_count: seller.sales_count,
+        top_products: seller.top_products,
+        bonus: +seller.bonus.toFixed(2),
+    })); 
 }
