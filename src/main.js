@@ -2,7 +2,9 @@ function mainDataCheck(data, options) {
     if (!data 
         || !Array.isArray(data.sellers) || !Array.isArray(data.products) || !Array.isArray(data.purchase_records) 
         || data.sellers.length === 0 || data.products.length === 0 || data.purchase_records.length === 0
-        || typeof options !== "object") 
+        || typeof options !== "object"
+        || !options.calculateRevenue
+        || !options.calculateBonus)
     throw new Error('Некорректные входные данные');
 }
 
@@ -13,8 +15,8 @@ function mainDataCheck(data, options) {
  * @returns {number}
  */
 function calculateSimpleRevenue(purchase, _product) {
-    const discount =  1 - (purchase.discount / 100)
-    return ((_product)? _product.sale_price : purchase.sale_price) * purchase.quantity * discount
+    const discount = 1 - (purchase.discount / 100);
+    return purchase.sale_price * purchase.quantity * discount;
 }
 
 /**
@@ -73,7 +75,6 @@ function analyzeSalesData(data, options) {
     data.purchase_records.forEach(record => {
         const seller = sellerIndex[record.seller_id];
         seller.sales_count += 1
-        seller.revenue += record.total_amount
 
         // Расчёт прибыли для каждого товара
         record.items.forEach(item => {
@@ -82,13 +83,15 @@ function analyzeSalesData(data, options) {
             const cost = product.purchase_price * item.quantity;
             const revenue = calculateSimpleRevenue(item, product)
             const profit = revenue - cost;
+            seller.profit += profit
+            seller.revenue += revenue
+            
 
             if (!seller.products_sold[item.sku]) {
                 seller.products_sold[item.sku] = 0;
             }
 
             seller.products_sold[item.sku] += item.quantity;  
-            seller.profit += profit
         });
     }); 
 
